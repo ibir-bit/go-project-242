@@ -1,0 +1,19 @@
+linters:
+  enable:
+    - govet        # Ищет подозрительные конструкции
+    - errcheck     # Проверяет, что ошибки обрабатываются
+    - staticcheck  # Продвинутый статический анализ
+    - gosimple     # Упрощение кода
+    - ineffassign  # Поиск неиспользуемых присваиваний
+    - unused       # Поиск неиспользуемого кода
+    - gofmt        # Проверка форматирования
+    - goimports    # Проверка импортов
+
+run:
+  timeout: 5m
+  tests: true
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0
