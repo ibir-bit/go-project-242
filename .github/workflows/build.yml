@@ -37,3 +37,91 @@ jobs:
     - name: Run application
       run: |
         go run ./cmd/hexlet-path-size
+        
+name: Go Tests
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.21'
+        check-latest: true
+        cache: true
+
+    - name: Download dependencies
+      run: go mod download
+
+    - name: Run tests
+      run: make test
+
+    - name: Run tests with coverage
+      run: make test-cover
+
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: coverage.out
+        retention-days: 7
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: test  # Ждёт успешного прохождения тестов
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.6'
+        cache: true
+
+    - name: Build
+      run: make build
+
+    - name: Upload binary
+      uses: actions/upload-artifact@v4
+      with:
+        name: hexlet-path-size
+        path: bin/hexlet-path-size
+        retention-days: 7
+
+  test-matrix:
+    name: Test on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25.6'
+        cache: true
+
+    - name: Run tests
+      run: go test ./...
+
+    - name: Run tests with coverage
+      run: go test -cover ./...
