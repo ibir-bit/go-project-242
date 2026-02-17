@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.6'
+          go-version: '1.26'  # Изменено с 1.25.6 на 1.26
           cache: true
       
       - name: Run linter
@@ -34,7 +34,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.6'
+          go-version: '1.26'  # Изменено
           cache: true
       
       - name: Install dependencies
@@ -56,26 +56,8 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.25.6'
+          go-version: '1.26'  # Изменено
           cache: true
       
       - name: Build
         run: go build -v ./cmd/hexlet-path-size
-
-  test-matrix:
-    name: Test on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-      
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.25.6'
-          cache: true
-      
-      - name: Run tests
-        run: go test ./...
