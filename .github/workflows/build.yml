@@ -16,7 +16,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'  # Изменено с 1.25.6 на 1.26
+          go-version: '1.25.6'
           cache: true
       
       - name: Run linter
@@ -34,7 +34,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'  # Изменено
+          go-version: '1.25.6'  # Изменено
           cache: true
       
       - name: Install dependencies
@@ -56,7 +56,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.26'  # Изменено
+          go-version: '1.25.6'  # Изменено
           cache: true
       
       - name: Build
