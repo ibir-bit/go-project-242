@@ -1,8 +1,6 @@
 package main
 
 import (
-	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,77 +10,63 @@ func main() {
 
 }
 
-func GetSize(adress string) (int64, error) {
-	var human bool
-	flag.BoolVar(&human, "h", false, "human-readable sizes (auto-select unit)")
-
-	flag.Parse()
-
-	_, err := os.Lstat(adress)
+func GetSize(path string) (int64, string, error) {
+	fi, err := os.Lstat(path)
 	if err != nil {
-		return 0, errors.New("Такого файла не существует")
+		return 0, path, err
 	}
+	if fi.IsDir() == false {
+		return fi.Size(), path, nil
+	}
+	if fi.Mode()&os.ModeSymlink == 0 {
+		files, err := os.ReadDir(path)
+		if err != nil {
+			return 0, path, err
+		}
+		var value int64
+		for _, file := range files {
+			fullPath := filepath.Join(path, file.Name())
+			newfi, err := os.Lstat(fullPath)
+			if err != nil {
+				fmt.Printf("Ошибка при обработке %s: %v", fullPath, err)
+				continue
+			}
+			if newfi.Mode()&os.ModeSymlink == 0 {
+				if newfi.IsDir() == false {
+					value += newfi.Size()
+				}
 
-	targetInfo, err := os.Stat(adress)
+			}
+		}
+		return value, path, nil
+	}
+	target, err := os.Readlink(path)
 	if err != nil {
-		return 0, fmt.Errorf("не могу получить информацию: %w", err)
+		return 0, path, err
 	}
-
-	if !targetInfo.IsDir() {
-		return targetInfo.Size(), nil
-	}
-
-	entries, err := os.ReadDir(adress)
+	targetFi, err := os.Stat(target)
 	if err != nil {
-		return 0, errors.New("Такого пути не существует")
+		return 0, path, err
 	}
-
-	var size int64
-
-	for _, entry := range entries {
-		fullPath := filepath.Join(adress, entry.Name())
-
-		if entry.IsDir() {
+	if targetFi.IsDir() == false {
+		return targetFi.Size(), os.Readlink(path), nil
+	}
+	tfile, err := os.ReadDir(target)
+	if err != nil {
+		return 0, path, err
+	}
+	var tvalue int64
+	for _, file2 := range tfile {
+		fullPath2 := filepath.Join(path, file2.Name())
+		newtfi, err := os.Lstat(fullPath2)
+		if err != nil {
+			fmt.Printf("Ошибка при обработке %s: %v", fullPath, err)
 			continue
 		}
-
-		info, err := os.Stat(fullPath)
-		if err != nil {
-			return 0, errors.New("Ошибка чтения")
+		if newtfi.IsDir() == false {
+			tvalue += newtfi.Size()
 		}
 
-		size += info.Size()
 	}
-
-	return size, nil
-}
-
-func FormatSize(human bool, size int64) string {
-	if human {
-		fmt.Println(HumanizeSize(size))
-	} else {
-		fmt.Println(size)
-	}
-}
-
-func HumanizeSize(bytes int64) string {
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-		TB = GB * 1024
-	)
-
-	switch {
-	case bytes >= TB:
-		return fmt.Sprintf("%.2fTB", float64(bytes)/TB)
-	case bytes >= GB:
-		return fmt.Sprintf("%.2fGB", float64(bytes)/GB)
-	case bytes >= MB:
-		return fmt.Sprintf("%.2fMB", float64(bytes)/MB)
-	case bytes >= KB:
-		return fmt.Sprintf("%.2fKB", float64(bytes)/KB)
-	default:
-		return fmt.Sprintf("%dB", bytes)
-	}
+	return tvalue, target, nil
 }
