@@ -10,18 +10,18 @@ func main() {
 
 }
 
-func GetSize(path string) (int64, string, error) {
+func GetSize(path string) (int64, string) {
 	fi, err := os.Lstat(path)
 	if err != nil {
-		return 0, path, err
+		return 0, path
 	}
 	if fi.IsDir() == false {
-		return fi.Size(), path, nil
+		return fi.Size(), path
 	}
 	if fi.Mode()&os.ModeSymlink == 0 {
 		files, err := os.ReadDir(path)
 		if err != nil {
-			return 0, path, err
+			return 0, path
 		}
 		var value int64
 		for _, file := range files {
@@ -38,29 +38,29 @@ func GetSize(path string) (int64, string, error) {
 
 			}
 		}
-		return value, path, nil
+		return value, path
 	}
 	target, err := os.Readlink(path)
 	if err != nil {
-		return 0, path, err
+		return 0, path
 	}
 	targetFi, err := os.Stat(target)
 	if err != nil {
-		return 0, path, err
+		return 0, path
 	}
 	if targetFi.IsDir() == false {
-		return targetFi.Size(), os.Readlink(path), nil
+		return targetFi.Size(), target
 	}
 	tfile, err := os.ReadDir(target)
 	if err != nil {
-		return 0, path, err
+		return 0, path
 	}
 	var tvalue int64
 	for _, file2 := range tfile {
 		fullPath2 := filepath.Join(path, file2.Name())
 		newtfi, err := os.Lstat(fullPath2)
 		if err != nil {
-			fmt.Printf("Ошибка при обработке %s: %v", fullPath, err)
+			fmt.Printf("Ошибка при обработке %s: %v", fullPath2, err)
 			continue
 		}
 		if newtfi.IsDir() == false {
@@ -68,5 +68,5 @@ func GetSize(path string) (int64, string, error) {
 		}
 
 	}
-	return tvalue, target, nil
+	return tvalue, target
 }
