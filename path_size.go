@@ -1,4 +1,4 @@
-package main
+package code
 
 import (
 	"fmt"
@@ -6,56 +6,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/urfave/cli/v2"
 )
 
-func main() {
-	app := &cli.App{
-		Name:  "hexlet-path-size",
-		Usage: "print size of a file or directory; supports -r (recursive), -H (human-readable), -a (include hidden)",
-		Flags: []cli.Flag{
-			&cli.BoolFlag{
-				Name:    "recursive",
-				Aliases: []string{"r"},
-				Usage:   "recursive size of directories",
-			},
-			&cli.BoolFlag{
-				Name:    "human",
-				Aliases: []string{"H"},
-				Usage:   "human-readable sizes (auto-select unit)",
-			},
-			&cli.BoolFlag{
-				Name:    "all",
-				Aliases: []string{"a"},
-				Usage:   "include hidden files and directories",
-			},
-		},
-		Action: func(c *cli.Context) error {
-			if c.NArg() == 0 {
-				return fmt.Errorf("не указан путь к файлу или директории")
-			}
-
-			path := c.Args().First()
-			humanReadable := c.Bool("human")
-			showAll := c.Bool("all")
-			recursive := c.Bool("recursive")
-
-			size, resolvedPath := GetSize(path, showAll, recursive)
-			fmt.Printf("%s\t%s\n", FormatSize(size, humanReadable), resolvedPath)
-
-			return nil
-		},
-	}
-
-	err := app.Run(os.Args)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Ошибка: %v\n", err)
-		os.Exit(1)
-	}
+func GetPathSize(path string, recursive, human, all bool) (string, error) {
+	size, resolvedPath := getSize(path, all, recursive)
+	sizeStr := formatSize(size, human)
+	return fmt.Sprintf("%s\t%s", sizeStr, resolvedPath), nil
 }
 
-func GetSize(path string, showAll bool, recursive bool) (int64, string) {
+func getSize(path string, showAll bool, recursive bool) (int64, string) {
 	fi, err := os.Lstat(path)
 	if err != nil {
 		return 0, path
@@ -67,7 +26,7 @@ func GetSize(path string, showAll bool, recursive bool) (int64, string) {
 			if err != nil {
 				return 0, path
 			}
-			return GetSize(target, showAll, recursive)
+			return getSize(target, showAll, recursive)
 		}
 		return fi.Size(), path
 	}
@@ -88,7 +47,7 @@ func GetSize(path string, showAll bool, recursive bool) (int64, string) {
 		if !file.IsDir() {
 			newfi, err := os.Lstat(fullPath)
 			if err != nil {
-				fmt.Printf("Ошибка при обработке %s: %v\n", fullPath, err)
+				fmt.Fprintf(os.Stderr, "Ошибка при обработке %s: %v\n", fullPath, err)
 				continue
 			}
 
@@ -109,7 +68,7 @@ func GetSize(path string, showAll bool, recursive bool) (int64, string) {
 			}
 		} else {
 			if recursive {
-				subSize, _ := GetSize(fullPath, showAll, recursive)
+				subSize, _ := getSize(fullPath, showAll, recursive)
 				total += subSize
 			}
 		}
@@ -118,7 +77,7 @@ func GetSize(path string, showAll bool, recursive bool) (int64, string) {
 	return total, path
 }
 
-func FormatSize(size int64, human bool) string {
+func formatSize(size int64, human bool) string {
 	if !human {
 		return strconv.FormatInt(size, 10) + "B"
 	}
