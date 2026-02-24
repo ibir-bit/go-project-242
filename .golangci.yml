@@ -1,8 +1,15 @@
-version: "2"
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
 
 run:
   timeout: 5m
-  tests: true
+  go: '1.24'
 
-linters:
-  default: standard
+issues:
+  exclude-use-default: false
