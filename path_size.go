@@ -9,9 +9,8 @@ import (
 )
 
 func GetPathSize(path string, recursive, human, all bool) (string, error) {
-	size, resolvedPath := getSize(path, all, recursive)
-	sizeStr := formatSize(size, human)
-	return fmt.Sprintf("%s\t%s", sizeStr, resolvedPath), nil
+	size, _ := getSize(path, all, recursive)
+	return formatSize(size, human), nil
 }
 
 func getSize(path string, showAll bool, recursive bool) (int64, string) {
